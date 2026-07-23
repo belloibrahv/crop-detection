@@ -1,0 +1,62 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.so
+.Python
+*.so
+*.egg-info/
+dist/
+build/
+.env
+.venv/
+env/
+venv/
+*/.venv/
+*/venv/
+*/env/
+.venv*/
+*/.venv*/
+*venv*/
+*/*venv*/
+
+# Node
+node_modules/
+dist/
+.vite/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Docker
+.dockerignore
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Large data and models
+data/
+*.keras
+*.h5
+*.pb
+*.pth
+*.pt
+*.onnx
+
+# Local uploads & test cache
+api/uploads/
+api/instance/
+.pytest_cache/
+*/.pytest_cache/
+

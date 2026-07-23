@@ -1,0 +1,62 @@
+{
+  "0": {
+    "crop": "Maize",
+    "disease": "Maize Common Rust",
+    "is_healthy": false
+  },
+  "1": {
+    "crop": "Maize",
+    "disease": "Maize Healthy",
+    "is_healthy": true
+  },
+  "2": {
+    "crop": "Maize",
+    "disease": "Maize Leaf Blight (Northern)",
+    "is_healthy": false
+  },
+  "3": {
+    "crop": "Maize",
+    "disease": "Maize Leaf Spot (Gray)",
+    "is_healthy": false
+  },
+  "4": {
+    "crop": "Tomato",
+    "disease": "Tomato Bacterial Spot",
+    "is_healthy": false
+  },
+  "5": {
+    "crop": "Tomato",
+    "disease": "Tomato Early Blight",
+    "is_healthy": false
+  },
+  "6": {
+    "crop": "Tomato",
+    "disease": "Tomato Healthy",
+    "is_healthy": true
+  },
+  "7": {
+    "crop": "Tomato",
+    "disease": "Tomato Late Blight",
+    "is_healthy": false
+  },
+  "8": {
+    "crop": "Tomato",
+    "disease": "Tomato Leaf Mould",
+    "is_healthy": false
+  },
+  "9": {
+    "crop": "Tomato",
+    "disease": "Tomato Mosaic Virus",
+    "is_healthy": false
+  },
+  "10": {
+    "crop": "Tomato",
+    "disease": "Tomato Septoria Leaf Spot",
+    "is_healthy": false
+  },
+  "11": {
+    "crop": "Tomato",
+    "disease": "Tomato Yellow Leaf Curl Virus",
+    "is_healthy": false
+  }
+}

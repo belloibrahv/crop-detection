@@ -1,0 +1,13 @@
+services:
+  # Inference Service (TensorFlow ML Model) - Requires paid plan for ML workloads
+  - type: pserv
+    name: agroscan-inference
+    env: docker
+    plan: starter
+    region: oregon
+    dockerfilePath: ./inference/Dockerfile
+    dockerContext: ./inference
+    envVars:
+      - key: MODEL_VERSION
+        value: v1
+    healthCheckPath: /healthz

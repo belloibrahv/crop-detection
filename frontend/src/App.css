@@ -1,0 +1,19 @@
+/* App.css — Global styles for AgroScan NG */
+/* Most styling is handled by Tailwind CSS (index.css). */
+/* Add any global overrides here. */
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom file input — hide default ugly button on iOS Safari */
+input[type="file"]::-webkit-file-upload-button {
+  cursor: pointer;
+}
+
+/* Focus ring for accessibility */
+:focus-visible {
+  outline: 2px solid #10b981;
+  outline-offset: 2px;
+}

@@ -1,0 +1,58 @@
+{
+  "0": {
+    "crop": "Cassava",
+    "disease": "Cassava Healthy"
+  },
+  "1": {
+    "crop": "Maize",
+    "disease": "Maize Common Rust"
+  },
+  "2": {
+    "crop": "Maize",
+    "disease": "Maize Healthy"
+  },
+  "3": {
+    "crop": "Maize",
+    "disease": "Maize Leaf Blight (Northern)"
+  },
+  "4": {
+    "crop": "Maize",
+    "disease": "Maize Leaf Spot (Gray)"
+  },
+  "5": {
+    "crop": "Rice",
+    "disease": "Rice Blast"
+  },
+  "6": {
+    "crop": "Tomato",
+    "disease": "Tomato Bacterial Spot"
+  },
+  "7": {
+    "crop": "Tomato",
+    "disease": "Tomato Early Blight"
+  },
+  "8": {
+    "crop": "Tomato",
+    "disease": "Tomato Healthy"
+  },
+  "9": {
+    "crop": "Tomato",
+    "disease": "Tomato Late Blight"
+  },
+  "10": {
+    "crop": "Tomato",
+    "disease": "Tomato Leaf Mould"
+  },
+  "11": {
+    "crop": "Tomato",
+    "disease": "Tomato Mosaic Virus"
+  },
+  "12": {
+    "crop": "Tomato",
+    "disease": "Tomato Septoria Leaf Spot"
+  },
+  "13": {
+    "crop": "Tomato",
+    "disease": "Tomato Yellow Leaf Curl Virus"
+  }
+}
