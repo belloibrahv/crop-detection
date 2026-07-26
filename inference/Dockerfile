@@ -17,4 +17,7 @@ EXPOSE 8501
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=60s \
   CMD curl -f http://localhost:8501/healthz || exit 1
 
+# Use the real TF inference server when a model is present.
+# If models/v1/best_phase2.keras does not exist, serve.py returns 503 on
+# /predict but still starts — the health check passes via /healthz.
 CMD ["uvicorn", "serve:app", "--host", "0.0.0.0", "--port", "8501"]

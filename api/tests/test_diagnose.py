@@ -89,7 +89,7 @@ def test_diagnose_saves_thumbnail_url(mock_post, client):
 
 @patch('app.routes.diagnose.requests.post')
 def test_diagnose_low_confidence_flagged(mock_post, client):
-    mock_post.return_value = _mock_inference_response(confidence=45.0)
+    mock_post.return_value = _mock_inference_response(confidence=20.0)
 
     data = {'leaf_image': (io.BytesIO(_jpeg()), 'leaf.jpg', 'image/jpeg')}
     res = client.post(

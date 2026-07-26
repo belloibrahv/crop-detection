@@ -1,0 +1,142 @@
+{
+  "weighted_accuracy": 0.25898886658149295,
+  "weighted_precision": 0.32489523755209276,
+  "weighted_recall": 0.25898886658149295,
+  "weighted_f1": 0.25375243386330604,
+  "per_class_precision": [
+    0.43,
+    0.45315487571701724,
+    0.657608695652174,
+    0.36942675159235666,
+    0.2,
+    0.6858974358974359,
+    0.24299065420560748,
+    0.19534883720930232,
+    0.3333333333333333,
+    0.2697947214076246,
+    0.10408921933085502,
+    0.0347682119205298,
+    0.20095693779904306,
+    0.36916548797736914
+  ],
+  "per_class_recall": [
+    0.9347826086956522,
+    0.6601671309192201,
+    0.3457142857142857,
+    0.5370370370370371,
+    0.042105263157894736,
+    0.4863636363636364,
+    0.081377151799687,
+    0.14,
+    0.0038240917782026767,
+    0.15436241610738255,
+    0.0975609756097561,
+    0.37168141592920356,
+    0.39473684210526316,
+    0.261
+  ],
+  "per_class_f1": [
+    0.5890410958904109,
+    0.5374149659863946,
+    0.45318352059925093,
+    0.4377358490566038,
+    0.06956521739130435,
+    0.5691489361702129,
+    0.12192262602579132,
+    0.16310679611650486,
+    0.007561436672967863,
+    0.19637139807897544,
+    0.10071942446043167,
+    0.06358819076457228,
+    0.26632847178186425,
+    0.3057996485061511
+  ],
+  "per_class_support": [
+    46,
+    359,
+    350,
+    324,
+    190,
+    220,
+    639,
+    300,
+    523,
+    596,
+    287,
+    113,
+    532,
+    1000
+  ],
+  "class_map": {
+    "0": {
+      "crop": "Cassava",
+      "disease": "Cassava Healthy",
+      "is_healthy": true
+    },
+    "1": {
+      "crop": "Maize",
+      "disease": "Maize Common Rust",
+      "is_healthy": false
+    },
+    "2": {
+      "crop": "Maize",
+      "disease": "Maize Healthy",
+      "is_healthy": true
+    },
+    "3": {
+      "crop": "Maize",
+      "disease": "Maize Leaf Blight (Northern)",
+      "is_healthy": false
+    },
+    "4": {
+      "crop": "Maize",
+      "disease": "Maize Leaf Spot (Gray)",
+      "is_healthy": false
+    },
+    "5": {
+      "crop": "Rice",
+      "disease": "Rice Blast",
+      "is_healthy": false
+    },
+    "6": {
+      "crop": "Tomato",
+      "disease": "Tomato Bacterial Spot",
+      "is_healthy": false
+    },
+    "7": {
+      "crop": "Tomato",
+      "disease": "Tomato Early Blight",
+      "is_healthy": false
+    },
+    "8": {
+      "crop": "Tomato",
+      "disease": "Tomato Healthy",
+      "is_healthy": true
+    },
+    "9": {
+      "crop": "Tomato",
+      "disease": "Tomato Late Blight",
+      "is_healthy": false
+    },
+    "10": {
+      "crop": "Tomato",
+      "disease": "Tomato Leaf Mould",
+      "is_healthy": false
+    },
+    "11": {
+      "crop": "Tomato",
+      "disease": "Tomato Mosaic Virus",
+      "is_healthy": false
+    },
+    "12": {
+      "crop": "Tomato",
+      "disease": "Tomato Septoria Leaf Spot",
+      "is_healthy": false
+    },
+    "13": {
+      "crop": "Tomato",
+      "disease": "Tomato Yellow Leaf Curl Virus",
+      "is_healthy": false
+    }
+  }
+}

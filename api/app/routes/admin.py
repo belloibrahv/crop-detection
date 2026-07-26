@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, current_app
 from app import db
-from app.models import DiseaseClass, TreatmentAdvisory, Admin, AuditLog, DiagnosisRecord
+from app.models import DiseaseClass, TreatmentAdvisory, Admin, AuditLog, DiagnosisRecord, Farmer
 import jwt
 from functools import wraps
 
@@ -103,7 +103,7 @@ def update_advisory(admin, class_id):
 @admin_required
 def get_analytics(admin):
     total_diagnoses = DiagnosisRecord.query.count()
-    low_confidence = DiagnosisRecord.query.filter(DiagnosisRecord.confidence_score < 60).count()
+    low_confidence = DiagnosisRecord.query.filter(DiagnosisRecord.confidence_score < 30).count()
 
     from sqlalchemy import func
     crop_stats = db.session.query(

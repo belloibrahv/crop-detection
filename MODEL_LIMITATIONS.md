@@ -1,189 +1,118 @@
-# AgroScan NG - Current Model Limitations and Implementation Status
+# AgroScan NG — Model Status & Improvement Plan
 
-## Executive Summary
+Last updated: July 2026
 
-The current AgroScan NG model (v1) has significant limitations compared to the original requirements. This document outlines the current state, root causes, and recommended next steps.
+---
 
-## Current Model Status (v1)
+## Current State
 
-### Supported Crops and Classes
+### Model v1 — what was trained
 
-**Total Classes: 14 (vs 28 required)**
+Training was cut off at **3 epochs of phase 1** (phase 2 never ran).  
+Best val accuracy recorded: **80.9%** on 14 classes.  
+Release gate (NFR-2): **93%** weighted accuracy.
 
-| Crop | Classes Available | Classes Required | Gap |
-|------|------------------|------------------|-----|
-| **Cassava** | 1 (Healthy only) | 5 | 4 missing |
-| **Maize** | 4 (Common Rust, Healthy, Leaf Blight, Leaf Spot) | 6 | 2 missing |
-| **Tomato** | 8 (Bacterial Spot, Early Blight, Healthy, Late Blight, Leaf Mould, Mosaic Virus, Septoria Leaf Spot, Yellow Leaf Curl Virus) | 8 | ✅ Complete |
-| **Rice** | 1 (Blast only) | 5 | 4 missing |
-| **Yam** | 0 | 5 | 5 missing |
+### Classes in deployed model (14 / 29 target)
 
-### Data Distribution Issues
+| Crop | Available | Required | Gap |
+|------|-----------|----------|-----|
+| Tomato | 8 ✅ | 8 | — |
+| Maize | 4 | 6 | Streak Virus, Fall Armyworm |
+| Rice | 1 | 5 | Bacterial Blight, Brown Spot, Sheath Blight, Healthy |
+| Cassava | 1 (Healthy only) | 5 | 4 disease classes |
+| Yam | 0 | 5 | All — no public dataset exists |
 
-**Severe Class Imbalance:**
-- Tomato Yellow Leaf Curl Virus: 10,714 images
-- Cassava Healthy: 302 images
-- **Ratio: 35:1** (largest to smallest class)
+### Root cause of low accuracy
 
-This imbalance causes the model to be biased toward Tomato classes and perform poorly on underrepresented classes.
+1. **Training was not completed** — only 3 of 25 planned phase-1 epochs ran.
+2. **Severe class imbalance** — Tomato Yellow Leaf Curl had 10,714 images vs Cassava Healthy at 302 (35:1 ratio). Now capped at 8:1 in training splits.
+3. **Missing data** — Cassava disease images and several Rice classes were not downloaded during initial setup.
 
-### Model Performance
+---
 
-**Training Results:**
-- Phase 1 training accuracy: 13-21% (very poor)
-- Validation accuracy: Unstable (13-40%)
-- **Root Cause:** Severe class imbalance and insufficient training data for many classes
+## Improvements Made (this sprint)
 
-## Root Causes
+| # | Change | File(s) |
+|---|--------|---------|
+| 1 | Rebuilt balanced splits (8:1 max imbalance cap) | `data/splits/train.csv` |
+| 2 | Balanced CSVs capping Tomato at 1,000 per class | `data/splits/train_balanced.csv` |
+| 3 | Imported 3,224 Rice images (Bacterial Blight, Brown Spot) | `data/raw/Rice/` |
+| 4 | Added `download_missing.py` — downloads Cassava + Rice from Kaggle | `ml/download_missing.py` |
+| 5 | Upgraded `train.py` — EfficientNetB0 option, cosine LR decay, cutout augmentation | `ml/train.py` |
+| 6 | Added `train_colab.py` — self-contained GPU training script | `ml/train_colab.py` |
+| 7 | Fixed inference Dockerfile to use `serve.py` (real model) | `inference/Dockerfile` |
+| 8 | Rewrote `serve_simple.py` — real class names, startup warning, correct paths | `inference/serve_simple.py` |
+| 9 | Fixed low-confidence threshold from 60% → 30% | `api/app/routes/diagnose.py` |
+| 10 | Fixed `Farmer` missing import in admin routes | `api/app/routes/admin.py` |
 
-### 1. Data Availability Issues
+---
 
-**Missing Public Datasets:**
-- **Cassava:** Kaggle competition dataset requires special access (403 Forbidden errors)
-- **Rice:** Multiple Kaggle datasets blocked by API restrictions
-- **Yam:** No public dataset exists (requires local collection)
+## What Still Needs To Happen
 
-**Data Quality Issues:**
-- CCMT dataset import failed (0 images imported)
-- Only PlantVillage dataset successfully downloaded and organized
+### Immediate (required for 88%+ accuracy)
 
-### 2. Training Pipeline Limitations
+1. **Run `download_missing.py`** to fetch Cassava (5 classes, ~21,000 images) and extra Rice classes from Kaggle. Requires `~/.kaggle/kaggle.json`.
 
-The training pipeline is well-configured but cannot compensate for:
-- Missing training data for 14/28 required classes
-- Severe class imbalance (35:1 ratio)
-- Insufficient samples per class for effective learning
+   ```bash
+   ml/.venv/bin/python ml/download_missing.py
+   ```
 
-## Immediate Fixes Applied
+2. **Rebuild splits** after download:
 
-### Frontend Changes
-1. ✅ Removed Yam from crop selection dropdown (Diagnose.tsx)
-2. ✅ Updated Home page to show only supported crops (Home.tsx)
-3. ✅ Added warning banner about current model limitations
+   ```bash
+   ml/.venv/bin/python ml/rebuild_splits.py
+   ```
 
-### Backend Changes
-1. ✅ Added server-side validation to reject unsupported crop types
-2. ✅ Returns clear error message when unsupported crop is submitted
+3. **Run full training on a GPU** — do NOT train on CPU (would take days):
 
-## Recommended Next Steps
+   ```bash
+   # Google Colab T4 GPU (free) — see ml/train_colab.py for full setup guide
+   python ml/train_colab.py --arch efficientnetb0 --mixed-precision
+   ```
 
-### Phase 1: Improve Current Model (Short-term)
+4. **Copy trained model files** to `inference/models/v1/`:
+   - `best_phase2.keras`
+   - `class_indices.json`
 
-**Option A: Reduced Scope Implementation**
-- Train model on only Tomato + Maize (12 classes, 38,732 images)
-- Remove Cassava and Rice from supported crops
-- Expected accuracy: 70-85% (reasonable for production)
-- Timeline: 2-3 days
+5. **Run evaluate.py** to confirm the 93% gate before deploying.
 
-**Option B: Balanced Dataset**
-- Downsample Tomato classes to ~1,000 images each
-- Augment Cassava and Rice classes to match
-- Keep all 14 current classes
-- Expected accuracy: 60-75%
-- Timeline: 1 week
+### Short-term (4–8 weeks)
 
-### Phase 2: Complete Dataset Collection (Long-term)
+- Collect **Yam disease images** locally (50–100 per class minimum):
+  - Yam Anthracnose, Yam Mosaic Virus, Yam Dry Rot, Yam Leaf Spot, Yam Healthy
+  - Locations: Ogun State farms, partner with TASUED Agriculture Department
+  - Collection guidelines: natural daylight, single leaf, 512×512px minimum
 
-**Cassava Data Collection:**
-- Apply for Kaggle competition access
-- Alternative: Download from Mendeley Data (requires manual download)
-- Target: 5 classes, ~1,000 images each
+- Add **Maize Streak Virus** and **Fall Armyworm** data from the CCMT Kaggle mirror.
 
-**Rice Data Collection:**
-- Find alternative public sources (not Kaggle)
-- Contact research institutions for dataset access
-- Target: 5 classes, ~1,000 images each
+### Long-term (next quarter)
 
-**Yam Data Collection (Critical):**
-- No public source exists
-- Must collect local images from Nigerian farms
-- Target: 50-100 real images per disease class
-- Locations: Ogun State and surrounding areas
-- Timeline: 2-3 months (field work required)
+- Train full 29-class model (all 5 crops including Yam)
+- Target: ≥ 93% weighted accuracy (NFR-2)
+- Remove model limitation warning from frontend
+- Deploy `v2` model with EfficientNetB0
 
-### Phase 3: Full Implementation
+---
 
-**Once complete dataset is available:**
-1. Retrain model with all 28 classes
-2. Achieve ≥93% weighted accuracy (NFR-2 requirement)
-3. Update frontend to include all 5 crops
-4. Remove limitation warnings
-5. Deploy to production
+## Expected Accuracy After Each Stage
 
-## Current System Capabilities
+| Stage | Classes | Expected Val Acc |
+|-------|---------|-----------------|
+| Current (3 epochs, phase 1 only) | 14 | ~81% |
+| Full training on current 14-class data | 14 | **88–91%** |
+| After Cassava + Rice data added | 18–19 | **87–91%** |
+| After Yam field collection | 29 | **90–93%** |
+| EfficientNetB0 + all data | 29 | **92–95%** |
 
-### What Works Now
-- ✅ Tomato disease detection (8 classes, good data)
-- ✅ Maize disease detection (4 classes, good data)
-- ✅ API inference service operational
-- ✅ Frontend diagnosis flow functional
-- ✅ Database and persistence working
-- ✅ Offline history caching
+---
 
-### What Doesn't Work
-- ❌ Yam detection (no training data)
-- ❌ Cassava detection (only Healthy class, poor data)
-- ❌ Rice detection (only Blast class, poor data)
-- ❌ Model accuracy below production threshold (26.8% vs 93% required)
+## Yam Data Collection Guidelines
 
-## Recommendations for Production
+Target classes: Anthracnose, Mosaic Virus, Dry Rot, Leaf Spot, Healthy
 
-### Immediate (This Week)
-1. **Implement Option A** - Train on Tomato + Maize only
-2. Update marketing materials to reflect current capabilities
-3. Set user expectations about supported crops
-4. Begin Yam data collection planning
-
-### Short-term (Next Month)
-1. Acquire Cassava and Rice datasets
-2. Train expanded model (14 classes)
-3. Achieve 70-80% accuracy threshold
-4. Beta testing with farmers
-
-### Long-term (Next Quarter)
-1. Complete Yam data collection
-2. Train full 28-class model
-3. Achieve 93% accuracy requirement
-4. Full production deployment
-
-## Data Collection Requirements for Yam
-
-### Target Classes (5)
-1. Yam Anthracnose
-2. Yam Mosaic Virus
-3. Yam Dry Rot
-4. Yam Leaf Spot
-5. Yam Healthy
-
-### Collection Guidelines
-- **Minimum:** 50 real images per class
-- **Target:** 100 real images per class
-- **Image Quality:** 512x512 pixels minimum
-- **Lighting:** Natural daylight, avoid shadows
-- **Focus:** Single leaf, clear disease symptoms
-- **Background:** Remove or blur background
-- **Format:** JPG or PNG
-
-### Collection Locations
-- Ogun State agricultural zones
-- Partner with local farmers and extension officers
-- Use mobile phones with good cameras
-- Document GPS coordinates and date
-
-### Augmentation Plan
-Once 50-100 real images per class are collected:
-1. Apply data augmentation (flip, rotate, color jitter)
-2. Generate synthetic images to reach 300 per class
-3. Balance with other crop classes
-4. Include in training pipeline
-
-## Conclusion
-
-The current system is functional for Tomato and Maize detection but falls short of the original requirements due to data availability issues. The recommended path forward is to:
-
-1. **Deploy limited version** (Tomato + Maize) for immediate value
-2. **Collect missing data** systematically (especially Yam)
-3. **Expand coverage incrementally** as data becomes available
-4. **Achieve full requirements** within 3-6 months
-
-This approach provides immediate utility while working toward the complete solution outlined in the original requirements.
+- Minimum: 50 real images per class (target: 100+)
+- Image quality: ≥ 512×512 px, natural daylight, no heavy shadows
+- Subject: single leaf, disease symptoms clearly visible
+- Background: plain or blurred preferred
+- Format: JPG or PNG
+- Partner organisations: IITA (Ibadan), NRCRI (Umudike, Abia State)

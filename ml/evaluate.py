@@ -35,9 +35,14 @@ def load_class_indices(path: str) -> dict[int, dict]:
 def load_test_data(
     csv_path: str,
     label_to_idx: dict[str, int],
+    arch: str = 'mobilenetv2',
     batch_size: int = 32,
 ) -> tuple[tf.data.Dataset, list[int]]:
     import csv
+    if arch == 'efficientnetb0':
+        preprocess_fn = tf.keras.applications.efficientnet.preprocess_input
+    else:
+        preprocess_fn = tf.keras.applications.mobilenet_v2.preprocess_input
     rows = []
     with open(csv_path, newline='') as f:
         reader = csv.DictReader(f)
@@ -54,9 +59,10 @@ def load_test_data(
 
     def load_image(path, label):
         img = tf.io.read_file(path)
-        img = tf.image.decode_jpeg(img, channels=3)
+        img = tf.image.decode_jpeg(img, channels=3, try_recover_truncated=True)
+        img = tf.cast(img, tf.float32)
         img = tf.image.resize(img, IMG_SIZE)
-        img = tf.keras.applications.mobilenet_v2.preprocess_input(img)
+        img = preprocess_fn(img)
         return img, label
 
     ds = ds.map(load_image, num_parallel_calls=tf.data.AUTOTUNE).batch(batch_size)
@@ -117,7 +123,7 @@ def evaluate(model_dir: str, test_csv: str, class_indices_path: str) -> None:
     }
 
     print(f"Running inference on {test_csv} …")
-    test_ds, y_true = load_test_data(test_csv, label_to_idx)
+    test_ds, y_true = load_test_data(test_csv, label_to_idx, arch=args.arch)
 
     y_pred_probs = model.predict(test_ds, verbose=1)
     y_pred = np.argmax(y_pred_probs, axis=1).tolist()
@@ -145,6 +151,15 @@ def evaluate(model_dir: str, test_csv: str, class_indices_path: str) -> None:
 
     print("=" * 60)
 
+    # ── Save JSON results for fill_chapter4_tables.py ────────────────────────
+    out_dir = Path(model_dir).parent if Path(model_dir).is_file() else Path(model_dir)
+    json_out = out_dir / 'eval_results.json'
+    save_data = dict(metrics)
+    save_data['class_map'] = {str(k): v for k, v in class_map.items()}
+    with open(json_out, 'w') as _jf:
+        json.dump(save_data, _jf, indent=2)
+    print(f"\n  Results saved → {json_out}")
+
     # ── Gate check ──────────────────────────────────────────────────────────
     acc = metrics['weighted_accuracy']
     if acc >= ACCURACY_GATE:
@@ -160,5 +175,7 @@ if __name__ == '__main__':
     parser.add_argument('--model-dir',       default='models/v1')
     parser.add_argument('--test-csv',        default='data/splits/test.csv')
     parser.add_argument('--class-indices',   default='models/v1/class_indices.json')
+    parser.add_argument('--arch',            default='mobilenetv2',
+                        choices=['mobilenetv2', 'efficientnetb0'])
     args = parser.parse_args()
     evaluate(args.model_dir, args.test_csv, args.class_indices)

@@ -12,8 +12,8 @@ bp = Blueprint('diagnose', __name__)
 # 30 diagnoses per hour per IP address (SRS Section 17 security requirement)
 _RATE_LIMIT = '30 per hour'
 
-# Supported crops based on current model v1 capabilities
-SUPPORTED_CROPS = {'Cassava', 'Maize', 'Tomato', 'Rice'}
+# Supported crops based on current model v2 capabilities (24 classes)
+SUPPORTED_CROPS = {'Cassava', 'Maize', 'Rice', 'Tomato'}
 
 
 @bp.route('/diagnose', methods=['POST'])
@@ -83,7 +83,7 @@ def diagnose():
         return jsonify({'error': 'no_predictions', 'message': 'No predictions returned.'}), 500
 
     top_prediction = predictions[0]
-    low_confidence = top_prediction['confidence'] < 60
+    low_confidence = top_prediction['confidence'] < 30
 
     # 6. Fetch treatment advisory (skip for healthy classes)
     advisory = None
