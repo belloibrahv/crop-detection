@@ -52,8 +52,8 @@ This guide explains how to deploy the AgroScan NG application to Render.com. The
 4. Configure:
    - Name: `agroscan-api`
    - Environment: Docker
-   - Docker Context: `./api`
-   - Dockerfile Path: `./api/Dockerfile`
+   - Docker Context: `.`
+   - Dockerfile Path: `api/Dockerfile`
    - Region: Oregon
 5. Add Environment Variables:
    - `DATABASE_URL`: (from Render database connection string)
@@ -84,8 +84,8 @@ This guide explains how to deploy the AgroScan NG application to Render.com. The
 4. Configure:
    - Name: `agroscan-inference`
    - Environment: Docker
-   - Docker Context: `./inference`
-   - Dockerfile Path: `./inference/Dockerfile`
+   - Docker Context: `.`
+   - Dockerfile Path: `inference/Dockerfile`
    - Plan: Starter ($7/month - required for ML workloads)
    - Region: Oregon
 5. Add Environment Variables:

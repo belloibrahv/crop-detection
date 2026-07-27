@@ -1,0 +1,21 @@
+# Local Python/editor noise
+__pycache__
+*.pyc
+*.pyo
+.DS_Store
+.vscode/
+.idea/
+.venv/
+
+# Environment files (never ship)
+.env
+.env.*
+!.env.example
+
+# Uploaded runtime thumbnails (generated in container)
+uploads/
+uploads/thumbnails/
+
+# Local dev/test extras
+test_live.py
+*.log

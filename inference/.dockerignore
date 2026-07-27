@@ -1,0 +1,23 @@
+# Local Python/editor noise
+__pycache__
+*.pyc
+*.pyo
+.DS_Store
+.vscode/
+.idea/
+.venv/
+
+# Environment files (never ship)
+.env
+.env.*
+
+# Logs / local scratch
+*.log
+
+# Training/model experiments that are not runtime-required.
+# Keep inference/models/v1 + class_indices.json (used by default).
+models/v2/
+models/v2_smoke/
+models/v3/
+models/v4/
+models/v5/

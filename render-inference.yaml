@@ -5,8 +5,11 @@ services:
     env: docker
     plan: starter
     region: oregon
-    dockerfilePath: ./inference/Dockerfile
-    dockerContext: ./inference
+    # Keep Render build context at repo root and use the exact repo-relative
+    # path to the Dockerfile. This avoids "open Dockerfile: no such file or
+    # directory" errors observed with dockerContext != ".".
+    dockerfilePath: inference/Dockerfile
+    dockerContext: .
     envVars:
       - key: MODEL_VERSION
         value: v1

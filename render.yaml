@@ -6,15 +6,20 @@ services:
     user: agroscan
     plan: free
     region: oregon
-    
+
   # Backend API Service
   - type: pserv
     name: agroscan-api
     env: docker
     plan: free
     region: oregon
-    dockerfilePath: ./api/Dockerfile
-    dockerContext: ./api
+    # Render Docker service context is repo root by default.
+    # Using root context + explicit Dockerfile path avoids legacy
+    # behaviors where dockerContext + dockerfilePath can cause
+    # "open Dockerfile: no such file or directory" when the platform
+    # resolves paths relative to the context incorrectly.
+    dockerfilePath: api/Dockerfile
+    dockerContext: .
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -31,7 +36,7 @@ services:
       - key: UPLOAD_URL_PREFIX
         value: /api/v1/uploads/thumbnails
     healthCheckPath: /api/v1/healthz
-    
+
   # Frontend (Static Site)
   - type: web
     name: agroscan-frontend

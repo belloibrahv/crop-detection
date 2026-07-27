@@ -1,0 +1,44 @@
+# Local tooling / OS noise
+.DS_Store
+.git
+.github
+.venv
+node_modules
+__pycache__
+*.pyc
+*.pyo
+
+# Dataset + training directories (gigabytes) not needed for service builds.
+data/
+ml/
+.inference_models_export/
+
+# Local build outputs and caches
+frontend/dist
+frontend/.vite
+frontend/.cache
+frontend/dist-ssr
+api/uploads
+api/uploads/thumbnails
+*.log
+.cache/
+
+# Editor / IDE
+.vscode/
+.idea/
+
+# Env files (never ship these)
+.env
+.env.*
+!.env.example
+
+# Docker compose local state
+docker-compose.override.yml
+
+# Inference experiment variants not used by the default deployment.
+# Keep inference/models/v1 + inference/models/class_indices.json.
+inference/models/v2/
+inference/models/v2_smoke/
+inference/models/v3/
+inference/models/v4/
+inference/models/v5/

@@ -5,10 +5,22 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgl1 libglib2.0-0 curl && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Bring everything from build context into /context (works for both context shapes:
+#  - context = "." (repo root) => /context/inference/requirements.txt
+#  - context = "./inference" (service dir) => /context/requirements.txt
+COPY . /context/
 
-COPY . .
+RUN set -eu; \
+  if [ -f /context/inference/requirements.txt ]; then \
+    cp /context/inference/requirements.txt /app/requirements.txt; \
+    cp -rT /context/inference /app_ctx_tmp_promote && rm -rf /app && mv /app_ctx_tmp_promote /app; \
+  elif [ -f /context/requirements.txt ]; then \
+    cp /context/requirements.txt /app/requirements.txt; \
+    true; \
+  else \
+    echo "requirements.txt missing in build context"; exit 1; \
+  fi
+RUN pip install --no-cache-dir -r /app/requirements.txt
 
 ENV MODEL_VERSION=v1
 EXPOSE 8501

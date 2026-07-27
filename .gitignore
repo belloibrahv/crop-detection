@@ -32,7 +32,8 @@ dist/
 *.sqlite3
 
 # Docker
-.dockerignore
+# Docker .dockerignore files are build configuration and should be tracked.
+# .dockerignore
 
 # IDE
 .vscode/
