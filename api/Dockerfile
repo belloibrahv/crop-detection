@@ -13,7 +13,7 @@ COPY . /context/
 RUN set -eu; \
   if [ -f /context/api/requirements.txt ]; then \
     cp /context/api/requirements.txt /app/requirements.txt; \
-    cp -rT /context/api /app_ctx_tmp_promote && rm -rf /app && mv /app_ctx_promote /app; \
+    cp -rT /context/api /app_ctx_tmp_promote && rm -rf /app && mv /app_ctx_tmp_promote /app; \
   elif [ -f /context/requirements.txt ]; then \
     cp /context/requirements.txt /app/requirements.txt; \
     true; \

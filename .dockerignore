@@ -1,42 +1,80 @@
-# Local tooling / OS noise
-.DS_Store
-.git
-.github
-.venv
-node_modules
-__pycache__
+# === Virtual Environments (ALL of them, at any depth) ===
+.venv/
+.venv*/
+*/.venv/
+*/.venv*/
+*/*/.venv/
+*/*/.venv*/
+venv/
+venv*/
+*/venv/
+*/venv*/
+env/
+env*/
+*/env/
+*/env*/
+
+# === Node / Frontend junk ===
+node_modules/
+*/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/.cache/
+frontend/dist-ssr/
+
+# === Python bytecode / caches ===
+__pycache__/
+*/__pycache__/
+*/*/__pycache__/
 *.pyc
 *.pyo
+*.pyd
+.pytest_cache/
+*/.pytest_cache/
+*/*/.pytest_cache/
 
-# Dataset + training directories (gigabytes) not needed for service builds.
+# === Dataset + training directories (gigabytes) ===
 data/
 ml/
 .inference_models_export/
 
-# Local build outputs and caches
-frontend/dist
-frontend/.vite
-frontend/.cache
-frontend/dist-ssr
-api/uploads
-api/uploads/thumbnails
-*.log
-.cache/
+# === Local uploads & test cache ===
+api/uploads/
+api/instance/
+api/uploads/thumbnails/
 
-# Editor / IDE
+# === Keras / model weight files (tracked separately or huge) ===
+*.keras
+*.h5
+*.pb
+*.pth
+*.pt
+*.onnx
+
+# === Editor / IDE ===
 .vscode/
 .idea/
+.DS_Store
+Thumbs.db
 
-# Env files (never ship these)
+# === Env files ===
 .env
 .env.*
 !.env.example
 
-# Docker compose local state
-docker-compose.override.yml
+# === Git / CI ===
+.git/
+.github/
 
-# Inference experiment variants not used by the default deployment.
-# Keep inference/models/v1 + inference/models/class_indices.json.
+# === Docker compose local state ===
+docker-compose.override.yml
+docker-compose.dev.yml
+
+# === Logs ===
+*.log
+.cache/
+
+# === Inference experiment variants not used by the default deployment ===
 inference/models/v2/
 inference/models/v2_smoke/
 inference/models/v3/
