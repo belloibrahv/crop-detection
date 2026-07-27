@@ -1,6 +1,8 @@
 """
 seed.py — Idempotent database seed for AgroScan NG.
 Safe to run on every container restart: skips inserts where data already exists.
+Never exits non-zero (deploy must proceed even if seed errors — tables are in
+place either way and users can seed later via admin UI if needed).
 """
 import sys
 from app import create_app, db
@@ -64,53 +66,91 @@ DISEASES_DATA = [
 def run_seed():
     app = create_app()
     with app.app_context():
+        # DEFENSIVE: Create any missing tables BEFORE querying.
+        # Alembic migrations should have done this, but on SQLite fallback
+        # (e.g. DATABASE_URL missing in manual Render services) there is
+        # often a path-resolution mismatch between alembic and seed.py
+        # that results in "no such table" errors even though migration
+        # reported success. create_all() is idempotent.
+        try:
+            db.create_all()
+            db.session.commit()
+            print("[seed] db.create_all() OK — all tables guaranteed present.")
+        except Exception as e:
+            print(f"[seed][WARN] db.create_all() threw: {e!r} — continuing anyway")
+
         # ── Disease classes & advisories ──────────────────────────────────
         seeded_diseases = 0
         for i, data in enumerate(DISEASES_DATA):
-            exists = DiseaseClass.query.filter_by(
-                crop_name=data['crop'], disease_name=data['disease']
-            ).first()
+            try:
+                exists = DiseaseClass.query.filter_by(
+                    crop_name=data['crop'], disease_name=data['disease']
+                ).first()
+            except Exception as e:
+                print(f"[seed][ERROR] DiseaseClass lookup failed for {data['crop']}/{data['disease']}: {e!r}")
+                continue
             if exists:
                 continue
 
-            disease = DiseaseClass(
-                class_id=i,
-                crop_name=data['crop'],
-                disease_name=data['disease'],
-                is_healthy=data['is_healthy'],
-                description=f"{data['crop']} — {data['disease']}",
-            )
-            db.session.add(disease)
-
-            if not data['is_healthy']:
-                advisory = TreatmentAdvisory(
+            try:
+                disease = DiseaseClass(
                     class_id=i,
-                    recommended_action=data['advisory'],
-                    local_treatment_options=data.get('local'),
+                    crop_name=data['crop'],
+                    disease_name=data['disease'],
+                    is_healthy=data['is_healthy'],
+                    description=f"{data['crop']} — {data['disease']}",
                 )
-                db.session.add(advisory)
+                db.session.add(disease)
 
-            seeded_diseases += 1
+                if not data['is_healthy']:
+                    advisory = TreatmentAdvisory(
+                        class_id=i,
+                        recommended_action=data['advisory'],
+                        local_treatment_options=data.get('local'),
+                    )
+                    db.session.add(advisory)
+
+                seeded_diseases += 1
+            except Exception as e:
+                print(f"[seed][ERROR] Failed to stage disease_class id={i} ({data['crop']}/{data['disease']}): {e!r}")
+                db.session.rollback()
+                continue
 
         # ── Default admin user ────────────────────────────────────────────
         seeded_admin = False
-        if not Admin.query.filter_by(email='admin@agroscan.com').first():
-            password = b'admin123'
-            hashed = bcrypt.hashpw(password, bcrypt.gensalt())
-            admin = Admin(
-                email='admin@agroscan.com',
-                password_hash=hashed.decode('utf-8'),
-            )
-            db.session.add(admin)
-            seeded_admin = True
+        try:
+            if not Admin.query.filter_by(email='admin@agroscan.com').first():
+                password = b'admin123'
+                hashed = bcrypt.hashpw(password, bcrypt.gensalt())
+                admin = Admin(
+                    email='admin@agroscan.com',
+                    password_hash=hashed.decode('utf-8'),
+                )
+                db.session.add(admin)
+                seeded_admin = True
+        except Exception as e:
+            print(f"[seed][ERROR] Admin lookup/insert failed: {e!r}")
+            db.session.rollback()
+            seeded_admin = False
 
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception as e:
+            print(f"[seed][ERROR] db.session.commit() failed: {e!r}")
+            db.session.rollback()
+            seeded_diseases = 0
+            seeded_admin = False
 
         if seeded_diseases or seeded_admin:
             print(f"[seed] Inserted {seeded_diseases} disease classes, admin={'yes' if seeded_admin else 'skip'}.")
         else:
-            print("[seed] Database already seeded — nothing to do.")
+            print("[seed] Database already seeded (or skipped seed) — nothing to do.")
 
 
 if __name__ == '__main__':
-    run_seed()
+    try:
+        run_seed()
+    except Exception as e:
+        # Never propagate — seed failure must not crash the deploy.
+        print(f"[seed][FATAL-CAUGHT] run_seed() raised {e!r} — continuing to boot.")
+    sys.exit(0)

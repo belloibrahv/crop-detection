@@ -1,20 +1,15 @@
 import os
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config, pool
+from sqlalchemy import engine_from_config, pool, create_engine
 from alembic import context
 
-# Pull in the Flask app so we have the model metadata
 from app import create_app, db
 
-# Alembic Config object
 config = context.config
 
-# Override sqlalchemy.url from environment
-config.set_main_option(
-    'sqlalchemy.url',
-    os.getenv('DATABASE_URL', 'sqlite:///dev.db').replace('postgres://', 'postgresql://')
-)
+DB_URI = os.getenv('DATABASE_URL', 'sqlite:///dev.db').replace('postgres://', 'postgresql://')
+config.set_main_option('sqlalchemy.url', DB_URI)
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
@@ -24,8 +19,7 @@ target_metadata = db.metadata
 
 
 def run_migrations_offline() -> None:
-    """Run migrations in 'offline' mode (no DB connection required)."""
-    url = config.get_main_option('sqlalchemy.url')
+    url = config.get_main_option('sqlalchemy.url') or DB_URI
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -37,12 +31,14 @@ def run_migrations_offline() -> None:
 
 
 def run_migrations_online() -> None:
-    """Run migrations in 'online' mode (requires live DB connection)."""
-    connectable = engine_from_config(
-        config.get_section(config.config_ini_section, {}),
-        prefix='sqlalchemy.',
-        poolclass=pool.NullPool,
-    )
+    # Build engine DIRECTLY from the resolved DB_URI.
+    # Using get_section() + set_main_option() is unreliable across
+    # alembic versions; constructing the engine directly guarantees
+    # the env-var override is used, not whatever stale value lives in
+    # alembic.ini. This is also critical on Render where SQLite fallback
+    # must be exactly the same file path in alembic, create_app() and seed.py.
+    connectable = create_engine(DB_URI, poolclass=pool.NullPool)
+
     with connectable.connect() as connection:
         context.configure(connection=connection, target_metadata=target_metadata)
         with context.begin_transaction():
