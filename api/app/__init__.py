@@ -40,6 +40,11 @@ def create_app():
     app.register_blueprint(auth.bp, url_prefix='/api/v1/auth')
     app.register_blueprint(health.bp, url_prefix='/api/v1')
 
+    # Bare-root handlers (no blueprint) — blueprints cannot be registered twice)
+    from app.routes.health import root as _health_root, health_check as _health_check
+    app.add_url_rule('/', endpoint='root_root', view_func=_health_root, methods=['GET'])
+    app.add_url_rule('/healthz', endpoint='root_healthz', view_func=_health_check, methods=['GET'])
+
     # Generic 429 handler so clients always get JSON
     @app.errorhandler(429)
     def ratelimit_handler(e):
@@ -47,5 +52,18 @@ def create_app():
             'error': 'rate_limit_exceeded',
             'message': 'Too many requests. Please wait a moment before trying again.',
         }), 429
+
+    # Friendly 404 handler — return JSON instead of the ugly Werkzeug HTML
+    # "Not Found" page. Makes the API look polished when users miss routes.
+    @app.errorhandler(404)
+    def not_found_handler(e):
+        return jsonify({
+            'error': 'not_found',
+            'message': 'The requested URL was not found on this server.',
+            'service': 'AgroScan NG API',
+            'available_base': '/api/v1',
+            'health': '/healthz',
+            'frontend_url': os.getenv('ALLOWED_ORIGINS', 'https://agroscan-frontend.onrender.com'),
+        }), 404
 
     return app
