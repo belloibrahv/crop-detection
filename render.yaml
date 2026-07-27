@@ -1,5 +1,50 @@
+###############################################################################
+# Render Blueprint — AgroScan NG
+#
+# IMPORTANT NOTES — READ BEFORE DEPLOYING:
+#
+# 1. Render auto-generates hostnames like  "<something>-<hash>.onrender.com".
+#    Placeholder hostnames like "agroscan-api.onrender.com" DO NOT EXIST on
+#    the free tier unless you attach a custom domain.
+#
+#    SO: after services are created, you MUST MANUALLY override these 2 env
+#    vars in the Render Dashboard UI (Settings → Environment) — Blueprint
+#    `fromDatabase` links auto-resolve, but cross-service URL string literals
+#    in `envVars.value` stay as placeholders until you edit them:
+#
+#      Service            Env Var          Paste actual hostname from Dashboard
+#      -----------------  ---------------  ---------------------------------
+#      agroscan-api       ALLOWED_ORIGINS  https://<FRONTEND-HOSTNAME>
+#      agroscan-api       INFERENCE_URL    https://<INFERENCE-HOSTNAME>
+#      agroscan-frontend  VITE_API_BASE_URL  https://<API-HOSTNAME>/api/v1
+#
+# 2. FRONTEND — choose ONE of two modes (see service comments below):
+#
+#    MODE A — Static Site    (env: static)     Recommended for free tier. Faster.
+#    MODE B — Docker Web Svc (env: docker)     Works even if you accidentally
+#                                               picked "Web Service" type in the
+#                                               UI; uses Dockerfile.frontend
+#
+#    MODE B is what this file defaults to because your existing
+#    `agroscan-frontend` service was likely created as a Web Service.
+#    If you would rather use MODE A Static Site: swap the commented blocks.
+#
+# 3. SPA routing defense-in-depth (React BrowserRouter):
+#
+#    MODE A uses:  _redirects(/* → index.html) + 200.html copy
+#    MODE B uses:  nginx.conf (try_files $uri /index.html)
+#    Both prevent Render's default "Not Found" HTML on routes like /diagnose.
+#
+# 4. Docker services: use repo-root context (dockerContext: ".") with an
+#    explicit dockerfilePath. Eliminates "Dockerfile: no such file or
+#    directory" issues when dockerfilePath used to be resolved relative to a
+#    context that excluded it.
+###############################################################################
+
 services:
-  # PostgreSQL Database
+  # ─────────────────────────────────────────────────────────────────────
+  # PostgreSQL Database (private service)
+  # ─────────────────────────────────────────────────────────────────────
   - type: pserv
     name: agroscan-db
     databaseName: agroscan
@@ -7,17 +52,14 @@ services:
     plan: free
     region: oregon
 
-  # Backend API Service
+  # ─────────────────────────────────────────────────────────────────────
+  # Backend API Service  (Flask + Gunicorn + SQLAlchemy / Alembic)
+  # ─────────────────────────────────────────────────────────────────────
   - type: pserv
     name: agroscan-api
     env: docker
     plan: free
     region: oregon
-    # Render Docker service context is repo root by default.
-    # Using root context + explicit Dockerfile path avoids legacy
-    # behaviors where dockerContext + dockerfilePath can cause
-    # "open Dockerfile: no such file or directory" when the platform
-    # resolves paths relative to the context incorrectly.
     dockerfilePath: api/Dockerfile
     dockerContext: .
     envVars:
@@ -25,10 +67,14 @@ services:
         fromDatabase:
           name: agroscan-db
           property: connectionString
+      # ⚠️ OVERRIDE IN DASHBOARD UI: replace placeholder below with your
+      # Render-assigned inference hostname (e.g. https://agroscan-inference-xyz.onrender.com)
       - key: INFERENCE_URL
         value: https://agroscan-inference.onrender.com
       - key: JWT_SECRET
         generateValue: true
+      # ⚠️ OVERRIDE IN DASHBOARD UI: replace placeholder below with your
+      # Render-assigned FRONTEND hostname (e.g. https://crop-detection-abc.onrender.com)
       - key: ALLOWED_ORIGINS
         value: https://agroscan-frontend.onrender.com
       - key: UPLOAD_DIR
@@ -37,13 +83,58 @@ services:
         value: /api/v1/uploads/thumbnails
     healthCheckPath: /api/v1/healthz
 
-  # Frontend (Static Site)
+  # ─────────────────────────────────────────────────────────────────────
+  # Frontend — MODE B (DEFAULT in this repo) : Docker Web Service
+  # Why this default? If you manually created `agroscan-frontend` as a
+  # Web Service (not a Static Site) in the Dashboard, Render defaults to
+  # Docker runtime and looks for a Dockerfile.
+  #
+  # Dockerfile.frontend = 2-stage build: node:20-alpine builds Vite →
+  # nginx:alpine serves the dist/ folder.  nginx.conf handles SPA routes.
+  #
+  # Dashboard UI fields for MODE B:
+  #   Environment     = Docker
+  #   Dockerfile Path = Dockerfile.frontend
+  #   Docker Context  = .
+  #   Health Check    = /  (or leave blank)
+  # ─────────────────────────────────────────────────────────────────────
   - type: web
     name: agroscan-frontend
     plan: free
     region: oregon
-    buildCommand: cd frontend && npm install && npm run build
-    publishDirectory: frontend/dist
+    env: docker
+    dockerfilePath: Dockerfile.frontend
+    dockerContext: .
+    healthCheckPath: /
     envVars:
+      # ⚠️ OVERRIDE IN DASHBOARD UI — paste your API hostname + /api/v1
+      # e.g.  VITE_API_BASE_URL = https://crop-detection-8a7h.onrender.com/api/v1
       - key: VITE_API_BASE_URL
         value: https://agroscan-api.onrender.com/api/v1
+
+  # ─────────────────────────────────────────────────────────────────────
+  # Frontend — MODE A  (Static Site, OPTIONAL — uncomment MODE A +
+  #                    comment MODE B above if you prefer this)
+  #
+  # MODE A = cheaper & faster build/serving than Docker.  Pick ONLY if:
+  #   a) you are creating the frontend FRESH via Blueprint → Sync, OR
+  #   b) you manually set the existing frontend service to Environment
+  #      = "Static Site" in the Dashboard.
+  #
+  # Dashboard UI fields for MODE A:
+  #   Environment      = Static Site
+  #   Build Command    = cd frontend && npm install --no-audit --no-fund && npm run build && cp dist/index.html dist/200.html
+  #   Publish Dir      = frontend/dist
+  # ─────────────────────────────────────────────────────────────────────
+  # - type: web
+  #   name: agroscan-frontend
+  #   plan: free
+  #   region: oregon
+  #   env: static
+  #   buildCommand: cd frontend && npm install --no-audit --no-fund && npm run build && cp dist/index.html dist/200.html
+  #   publishDirectory: frontend/dist
+  #   envVars:
+  #     # ⚠️ OVERRIDE IN DASHBOARD UI — paste your API hostname + /api/v1
+  #     # e.g.  VITE_API_BASE_URL = https://crop-detection-8a7h.onrender.com/api/v1
+  #     - key: VITE_API_BASE_URL
+  #       value: https://agroscan-api.onrender.com/api/v1

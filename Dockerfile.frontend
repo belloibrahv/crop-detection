@@ -1,0 +1,54 @@
+###############################################################################
+# Dockerfile.frontend — builds the AgroScan NG React/Vite frontend and
+# serves it through nginx. Use this if you deploy the frontend as a
+# RENDER WEB SERVICE (Docker environment) instead of as a Static Site.
+#
+# Multi-stage build:
+#   Stage 1 (builder): node:20-alpine  →  npm install + vite build
+#   Stage 2 (runtime): nginx:alpine    →  COPY dist/ into /usr/share/nginx/html
+#
+# Render UI settings for a Docker-based frontend Web Service:
+#       Dockerfile Path   = Dockerfile.frontend
+#       Docker Context    = .                  (repo root)
+#       Health Check Path = /                  (or leave empty)
+#
+# NOTE: This file must exist alongside the root-level safety Dockerfile.
+# If Render auto-assigns Environment = "Docker" and Dockerfile Path = ""
+# it will default to ./Dockerfile which builds the API — NOT what you want
+# for the frontend service. So explicitly set Dockerfile Path above.
+###############################################################################
+
+# ──── Stage 1: Build the React/Vite app ────────────────────────────────────
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Install base system deps (alpine needs these for some native npm modules)
+RUN apk add --no-cache curl
+
+# Copy only package files first → better Docker layer cache when only code changes
+COPY frontend/package*.json ./frontend/
+RUN cd frontend && npm install --no-audit --no-fund
+
+# Copy everything else and build. VITE_API_BASE_URL (if set via build-arg /
+# env var) is baked into the static bundle during `npm run build`.
+COPY frontend ./frontend
+# Pass any VITE_* env vars present at build time through to vite
+RUN cd frontend && npm run build
+
+# ──── Stage 2: nginx runtime ───────────────────────────────────────────────
+FROM nginx:alpine
+
+# nginx SPA routing: any unknown path → serve /index.html so React Router
+# works on deep links (e.g. /diagnose, /history, direct browser refresh).
+COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
+
+# Copy built static assets from the builder stage
+COPY --from=builder /app/frontend/dist /usr/share/nginx/html
+
+EXPOSE 80
+
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 --start-period=10s \
+  CMD curl -f http://localhost/ || exit 1
+
+CMD ["nginx", "-g", "daemon off;"]

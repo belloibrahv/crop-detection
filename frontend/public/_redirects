@@ -1,0 +1,6 @@
+# Render Static Site SPA rewrite rule (React Router BrowserRouter)
+# All routes (including deep-links like /diagnose, /history) must serve index.html.
+# Without this, any route other than / returns the plain "Not Found" page.
+#
+# Format: <source> <destination> <HTTP status code>
+/*    /index.html   200
