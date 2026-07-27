@@ -1,0 +1,40 @@
+###############################################################################
+# Dockerfile.api — explicit named variant for the AGROSCAN-API backend.
+#
+# In Render UI you can set:
+#     Dockerfile Path = "Dockerfile.api"
+#     Docker Context  = "."
+#
+# Equivalent to: docker build -f api/Dockerfile .
+###############################################################################
+
+FROM python:3.11-slim
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
+
+COPY . /context/
+
+RUN set -eu; \
+  if [ -f /context/api/requirements.txt ]; then \
+    cp /context/api/requirements.txt /app/requirements.txt; \
+    cp -rT /context/api /app_ctx_tmp_promote && rm -rf /app && mv /app_ctx_tmp_promote /app; \
+  elif [ -f /context/requirements.txt ]; then \
+    cp /context/requirements.txt /app/requirements.txt; \
+    true; \
+  else \
+    echo "requirements.txt missing in build context"; exit 1; \
+  fi
+RUN pip install --no-cache-dir -r /app/requirements.txt
+
+RUN mkdir -p /app/uploads/thumbnails
+
+RUN chmod +x /app/entrypoint.sh
+
+EXPOSE 5000
+
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 --start-period=40s \
+  CMD curl -f http://localhost:5000/api/v1/healthz || exit 1
+
+ENTRYPOINT ["/app/entrypoint.sh"]
