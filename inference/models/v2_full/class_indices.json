@@ -1,0 +1,122 @@
+{
+  "0": {
+    "crop": "Cassava",
+    "disease": "Cassava Bacterial Blight",
+    "is_healthy": false
+  },
+  "1": {
+    "crop": "Cassava",
+    "disease": "Cassava Brown Streak Disease",
+    "is_healthy": false
+  },
+  "2": {
+    "crop": "Cassava",
+    "disease": "Cassava Green Mottle",
+    "is_healthy": false
+  },
+  "3": {
+    "crop": "Cassava",
+    "disease": "Cassava Healthy",
+    "is_healthy": true
+  },
+  "4": {
+    "crop": "Cassava",
+    "disease": "Cassava Mosaic Disease",
+    "is_healthy": false
+  },
+  "5": {
+    "crop": "Maize",
+    "disease": "Fall Armyworm Damage",
+    "is_healthy": false
+  },
+  "6": {
+    "crop": "Maize",
+    "disease": "Maize Common Rust",
+    "is_healthy": false
+  },
+  "7": {
+    "crop": "Maize",
+    "disease": "Maize Healthy",
+    "is_healthy": true
+  },
+  "8": {
+    "crop": "Maize",
+    "disease": "Maize Leaf Blight (Northern)",
+    "is_healthy": false
+  },
+  "9": {
+    "crop": "Maize",
+    "disease": "Maize Leaf Spot (Gray)",
+    "is_healthy": false
+  },
+  "10": {
+    "crop": "Maize",
+    "disease": "Maize Streak Virus",
+    "is_healthy": false
+  },
+  "11": {
+    "crop": "Rice",
+    "disease": "Rice Bacterial Leaf Blight",
+    "is_healthy": false
+  },
+  "12": {
+    "crop": "Rice",
+    "disease": "Rice Blast",
+    "is_healthy": false
+  },
+  "13": {
+    "crop": "Rice",
+    "disease": "Rice Brown Spot",
+    "is_healthy": false
+  },
+  "14": {
+    "crop": "Rice",
+    "disease": "Rice Healthy",
+    "is_healthy": true
+  },
+  "15": {
+    "crop": "Rice",
+    "disease": "Rice Sheath Blight",
+    "is_healthy": false
+  },
+  "16": {
+    "crop": "Tomato",
+    "disease": "Tomato Bacterial Spot",
+    "is_healthy": false
+  },
+  "17": {
+    "crop": "Tomato",
+    "disease": "Tomato Early Blight",
+    "is_healthy": false
+  },
+  "18": {
+    "crop": "Tomato",
+    "disease": "Tomato Healthy",
+    "is_healthy": true
+  },
+  "19": {
+    "crop": "Tomato",
+    "disease": "Tomato Late Blight",
+    "is_healthy": false
+  },
+  "20": {
+    "crop": "Tomato",
+    "disease": "Tomato Leaf Mould",
+    "is_healthy": false
+  },
+  "21": {
+    "crop": "Tomato",
+    "disease": "Tomato Mosaic Virus",
+    "is_healthy": false
+  },
+  "22": {
+    "crop": "Tomato",
+    "disease": "Tomato Septoria Leaf Spot",
+    "is_healthy": false
+  },
+  "23": {
+    "crop": "Tomato",
+    "disease": "Tomato Yellow Leaf Curl Virus",
+    "is_healthy": false
+  }
+}

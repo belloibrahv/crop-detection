@@ -53,6 +53,21 @@ services:
     region: oregon
 
   # ─────────────────────────────────────────────────────────────────────
+  # Inference Service (FastAPI + TensorFlow)
+  # ─────────────────────────────────────────────────────────────────────
+  - type: pserv
+    name: agroscan-inference
+    env: docker
+    plan: free
+    region: oregon
+    dockerfilePath: inference/Dockerfile
+    dockerContext: .
+    envVars:
+      - key: MODEL_VERSION
+        value: v1
+    healthCheckPath: /healthz
+
+  # ─────────────────────────────────────────────────────────────────────
   # Backend API Service  (Flask + Gunicorn + SQLAlchemy / Alembic)
   # ─────────────────────────────────────────────────────────────────────
   - type: pserv
@@ -69,6 +84,8 @@ services:
           property: connectionString
       # ⚠️ OVERRIDE IN DASHBOARD UI: replace placeholder below with your
       # Render-assigned inference hostname (e.g. https://agroscan-inference-xyz.onrender.com)
+      # Note: The inference service is now defined in this blueprint, so after deployment
+      # you can find the actual hostname in the Render Dashboard
       - key: INFERENCE_URL
         value: https://agroscan-inference.onrender.com
       - key: JWT_SECRET

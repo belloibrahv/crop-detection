@@ -4,27 +4,17 @@ WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
 
-# Bring everything from build context into /context (reproducible location for both context shapes
-#  - context = "." (repo root) => /context/api/requirements.txt exists)
-#  - context = "./api" (service dir) => /context/requirements.txt exists
-# Note: COPY . drops the whole context into /context; we then promote api/* into /app.
-COPY . /context/
-
-RUN set -eu; \
-  if [ -f /context/api/requirements.txt ]; then \
-    cp /context/api/requirements.txt /app/requirements.txt; \
-    cp -rT /context/api /app_ctx_tmp_promote && rm -rf /app && mv /app_ctx_tmp_promote /app; \
-  elif [ -f /context/requirements.txt ]; then \
-    cp /context/requirements.txt /app/requirements.txt; \
-    true; \
-  else \
-    echo "requirements.txt missing in build context"; exit 1; \
-  fi
+# Copy requirements and install dependencies first (layer caching)
+COPY requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r /app/requirements.txt
+
+# Copy the rest of the application code
+COPY . /app/
 
 # Create uploads directory for thumbnails
 RUN mkdir -p /app/uploads/thumbnails
 
+# Make entrypoint executable
 RUN chmod +x /app/entrypoint.sh
 
 EXPOSE 5000
