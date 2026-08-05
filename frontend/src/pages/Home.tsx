@@ -77,6 +77,14 @@ const TEAM = [
     color: '#7c3aed',
   },
   {
+    name: 'Adegoke Adeyinka Quadri',
+    matric: '20180204344',
+    role: 'Student Researcher',
+    department: 'Computer & Information Science',
+    avatar: 'AQ',
+    color: '#e11d48',
+  },
+  {
     name: 'Prof. A. A. Owoade',
     matric: null,
     role: 'Project Supervisor',
@@ -311,7 +319,7 @@ export default function Home() {
       <Box sx={{ py: { xs: 8, md: 12 }, bgcolor: '#f8fafc', mx: -3, px: 3, borderRadius: 6 }}>
         <SectionTitle overline="The Team" title='Student <em>Researchers</em> &amp; Supervisor'
           subtitle="This project was developed in partial fulfilment of the B.Sc. Computer Science degree at TASUED, Ijagun." />
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3,1fr)' }, gap: 3, maxWidth: 900, mx: 'auto' }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2,1fr)', md: 'repeat(4,1fr)' }, gap: 3, maxWidth: 1200, mx: 'auto' }}>
           {TEAM.map(({ name, matric, role, department, avatar, color, isSupervisor }, i) => (
             <AnimatedSection key={name} delay={i * 0.1}>
               <Card className="card-hover" sx={{
